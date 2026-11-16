@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} · {{ APP_NAME }}{% endblock %}
+{% block content %}
+{% if abrir_detalle %}<button type="button" id="autoabrir" data-modal-url="{{ abrir_detalle }}" hidden></button>{% endif %}
+<div class="page-head">
+  <div><h1>{{ titulo }}</h1><p class="muted mb-0">{{ total }} registro{{ total|pluralize }}</p></div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-success" href="{{ excel_url }}{% if params %}?{{ params }}{% endif %}"><i class="bi bi-file-earmark-excel"></i> Descargar Excel</a>
+    {% if puede_nuevo %}<a class="btn btn-accent" href="{{ nuevo_url }}"><i class="bi bi-plus-lg"></i> {{ texto_nuevo }}</a>{% endif %}
+  </div>
+</div>
+
+{% if pastillas %}
+<div class="d-flex flex-wrap gap-2 mb-3" {% if refrescable %}data-refrescable{% endif %}>
+  {% for p in pastillas %}<a class="btn btn-sm rounded-pill fw-semibold {% if p.activo %}btn-accent{% else %}btn-outline-secondary{% endif %}" href="{{ p.url }}">{{ p.texto }}
+    <span class="badge rounded-pill ms-1 {% if p.activo %}text-bg-light{% else %}text-bg-secondary{% endif %}">{{ p.n }}</span></a>{% endfor %}
+</div>
+{% endif %}
+
+<form method="get" class="panel filtros mb-3" id="formFiltros">
+  {% if pastillas and estatus %}<input type="hidden" name="estatus" value="{{ estatus }}">{% endif %}
+  <div class="row g-2 align-items-end">
+    <div class="col-12 col-md-3"><label class="form-label small">Buscar</label>
+      <input class="form-control" name="q" value="{{ q }}" placeholder="Escribe para buscar..." autocomplete="off"></div>
+    {% for fl in filtros %}
+    <div class="col-6 col-md-2"><label class="form-label small">{{ fl.label }}</label>
+      {% if fl.tipo == 'date' %}<input class="form-control" type="date" name="{{ fl.name }}" value="{{ fl.valor }}">
+      {% else %}<select class="form-select" name="{{ fl.name }}"><option value="">Todos</option>
+        {% for v, t, g in fl.opciones %}<option value="{{ v }}" {% if g %}data-gerencia="{{ g }}"{% endif %} {% if v == fl.valor %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      </select>{% endif %}
+    </div>{% endfor %}
+    <div class="col-auto d-flex gap-2"><button class="btn btn-accent">Filtrar</button><a class="btn btn-outline-secondary" href="?">Limpiar</a></div>
+  </div>
+  {% if rapidos %}<div class="d-flex flex-wrap align-items-center gap-3 mt-2 small text-muted">Atajos:{% for t, u in rapidos %}<a href="{{ u }}">{{ t }}</a>{% endfor %}</div>{% endif %}
+</form>
+
+{% if chips %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <span class="muted small">Filtros activos:</span>
+  {% for ch in chips %}<a class="badge rounded-pill bg-success-subtle text-success-emphasis text-decoration-none fs-6 fw-semibold" href="{{ ch.quitar }}" title="Quitar este filtro">{{ ch.texto }} <i class="bi bi-x-lg"></i></a>{% endfor %}
+  <a class="small ms-1" href="?">Limpiar todo</a>
+</div>
+{% endif %}
+
+<div class="panel p-0 table-wrap" {% if refrescable %}data-refrescable{% endif %}>
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr>{% for c in columnas %}<th>{{ c }}</th>{% endfor %}{% if tiene_acciones %}<th class="text-end">Acciones</th>{% endif %}</tr></thead>
+    <tbody>
+    {% for fila in filas %}
+      <tr>{% for c in fila.celdas %}<td>{{ c }}</td>{% endfor %}
+        {% if tiene_acciones %}<td class="text-end text-nowrap">
+          {% for a in fila.acciones %}
+            {% if a.modal %}<button type="button" class="btn btn-sm btn-outline-{{ a.clase }}" data-modal-url="{{ a.url }}" title="{{ a.titulo }}"><i class="bi bi-{{ a.icono }}"></i></button>
+            {% else %}<a class="btn btn-sm btn-outline-{{ a.clase }}" href="{{ a.url }}" title="{{ a.titulo }}" {% if a.externo %}target="_blank" rel="noopener"{% endif %}><i class="bi bi-{{ a.icono }}"></i></a>{% endif %}
+          {% endfor %}</td>{% endif %}
+      </tr>
+    {% empty %}
+      <tr><td colspan="{{ columnas|length|add:1 }}" class="text-center py-5 muted">No hay registros con estos filtros.
+        {% if puede_nuevo %}<br><a href="{{ nuevo_url }}">{{ texto_nuevo }}</a>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div {% if refrescable %}data-refrescable{% endif %}>
+{% if page.paginator.num_pages > 1 %}
+<nav class="d-flex justify-content-between align-items-center mt-3">
+  <span class="muted small">Página {{ page.number }} de {{ page.paginator.num_pages }}</span>
+  <div class="btn-group">
+    {% if page.has_previous %}<a class="btn btn-outline-secondary" href="?{% if params %}{{ params }}&{% endif %}page={{ page.previous_page_number }}">Anterior</a>{% endif %}
+    {% if page.has_next %}<a class="btn btn-outline-secondary" href="?{% if params %}{{ params }}&{% endif %}page={{ page.next_page_number }}">Siguiente</a>{% endif %}
+  </div>
+</nav>
+{% endif %}
+</div>
+{% endblock %}

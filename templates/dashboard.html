@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Inicio · {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Estado de los soportes</h1><p class="muted mb-0">Resumen · {{ alcance }}</p></div>
+  {% if puede_editar %}<a class="btn btn-accent" href="{% url 'soportes_nuevo' %}"><i class="bi bi-plus-lg"></i> Registrar soporte</a>{% endif %}
+</div>
+
+{% if asignados is not None %}
+<div class="panel p-0 table-wrap mb-3" data-refrescable>
+  <div class="d-flex justify-content-between align-items-center p-3 pb-2">
+    <h2 class="mb-0"><i class="bi bi-bell"></i> Solicitudes asignadas a mí <span class="muted fw-normal">({{ n_asignados }} abierta{{ n_asignados|pluralize }})</span></h2>
+    <a href="{% url 'soportes' %}?tecnico={{ user.pk }}">Ver todas</a>
+  </div>
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Fecha</th><th>Centro</th><th>Área</th><th>Motivo</th><th>Solicitó</th><th>Estatus</th><th class="text-end">Acciones</th></tr></thead>
+    <tbody>{% for s in asignados %}
+      <tr><td>{% if s.pk in nuevos %}<span class="badge text-bg-danger me-1">Nuevo</span>{% endif %}{{ s.fecha|date:"d/m/Y" }}</td>
+        <td>{{ s.centro }}</td><td>{{ s.area }}</td><td>{{ s.motivo }}</td><td>{{ s.solicitante }}</td>
+        <td><span class="badge text-bg-{% if s.estatus == 'PROCESO' %}info{% else %}warning{% endif %}">{{ s.get_estatus_display }}</span></td>
+        <td class="text-end text-nowrap">
+          <button class="btn btn-sm btn-outline-info" data-modal-url="{% url 'soportes_detalle' s.pk %}" title="Ver información"><i class="bi bi-eye"></i></button>
+          <a class="btn btn-sm btn-outline-warning" href="{% url 'soportes_editar' s.pk %}" title="Atender / editar"><i class="bi bi-pencil"></i></a></td></tr>
+    {% empty %}<tr><td colspan="7" class="text-center py-4 muted">No tienes solicitudes abiertas. ¡Todo al día!</td></tr>{% endfor %}</tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3"><div class="panel stat"><span class="chip chip-sky"><i class="bi bi-collection"></i></span><div><b>{{ total_soportes }}</b><div class="muted">Soportes totales</div></div></div></div>
+  <div class="col-6 col-xl-3"><div class="panel stat"><span class="chip chip-amber"><i class="bi bi-hourglass-split"></i></span><div><b>{{ s_cnt.PENDIENTE|default:0 }}</b><div class="muted">Pendientes</div></div></div></div>
+  <div class="col-6 col-xl-3"><div class="panel stat"><span class="chip chip-green"><i class="bi bi-check2-circle"></i></span><div><b>{{ s_cnt.RESUELTO|default:0 }}</b><div class="muted">Resueltos</div></div></div></div>
+  <div class="col-6 col-xl-3"><div class="panel stat"><span class="chip chip-slate"><i class="bi bi-pc-display"></i></span><div><b>{{ total_equipos }}</b><div class="muted">Equipos en {{ total_centros }} centro{{ total_centros|pluralize }}</div></div></div></div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-4"><div class="panel"><h2>Soportes por estatus</h2><div class="chart"><canvas id="cSoportes"></canvas></div></div></div>
+  <div class="col-lg-8"><div class="panel"><h2>Soportes de los últimos 6 meses</h2><div class="chart"><canvas id="cMeses"></canvas></div></div></div>
+  <div class="col-lg-8"><div class="panel"><h2>Soportes por gerencia</h2><div class="chart"><canvas id="cGerencias"></canvas></div></div></div>
+  <div class="col-lg-4"><div class="panel"><h2>Equipos por estatus</h2><div class="chart"><canvas id="cEquipos"></canvas></div></div></div>
+</div>
+
+<div class="panel p-0 table-wrap">
+  <div class="d-flex justify-content-between align-items-center p-3 pb-2"><h2 class="mb-0">Últimos soportes</h2><a href="{% url 'soportes' %}">Ver todos</a></div>
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Fecha</th><th>Gerencia</th><th>Centro</th><th>Motivo</th><th>Estatus</th><th></th></tr></thead>
+    <tbody>{% for s in recientes %}
+      <tr><td>{{ s.fecha|date:"d/m/Y" }}</td><td>{{ s.centro.gerencia }}</td><td>{{ s.centro }}</td><td>{{ s.motivo }}</td>
+        <td><span class="badge text-bg-{% if s.estatus == 'RESUELTO' %}success{% elif s.estatus == 'PROCESO' %}info{% else %}warning{% endif %}">{{ s.get_estatus_display }}</span></td>
+        <td class="text-end"><button class="btn btn-sm btn-outline-info" data-modal-url="{% url 'soportes_detalle' s.pk %}" title="Ver información"><i class="bi bi-eye"></i></button></td></tr>
+    {% empty %}<tr><td colspan="6" class="text-center py-4 muted">Aún no hay soportes registrados.</td></tr>{% endfor %}</tbody>
+  </table>
+</div>
+
+{{ datos|json_script:"datos" }}
+{% endblock %}
+
+{% block js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const D = JSON.parse(document.getElementById('datos').textContent);
+const oscuro = () => document.documentElement.getAttribute('data-bs-theme') === 'dark';
+let graficos = [];
+const dona = (id, d) => new Chart(document.getElementById(id), {type: 'doughnut',
+  data: {labels: d.labels, datasets: [{data: d.data, backgroundColor: d.colors, borderWidth: 0}]},
+  options: {maintainAspectRatio: false, cutout: '66%', plugins: {legend: {position: 'bottom'}}}});
+const barras = (id, d, color) => new Chart(document.getElementById(id), {type: 'bar',
+  data: {labels: d.labels, datasets: [{data: d.data, backgroundColor: color, borderRadius: 6}]},
+  options: {maintainAspectRatio: false, plugins: {legend: {display: false}},
+            scales: {y: {beginAtZero: true, ticks: {precision: 0}, grid: {color: oscuro() ? '#23324b' : '#eef2f7'}},
+                     x: {grid: {display: false}}}}});
+function dibujar() {                       // se vuelve a llamar al cambiar entre modo claro y oscuro
+  graficos.forEach(g => g.destroy());
+  Chart.defaults.font.family = "'Figtree', sans-serif";
+  Chart.defaults.color = oscuro() ? '#cbd5e1' : '#475569';
+  graficos = [dona('cSoportes', D.soportes), dona('cEquipos', D.equipos),
+              barras('cMeses', D.meses, '#14b8a6'), barras('cGerencias', D.gerencias, oscuro() ? '#60a5fa' : '#0b1a2e')];
+}
+dibujar();
+document.addEventListener('tema', dibujar);
+</script>
+{% endblock %}

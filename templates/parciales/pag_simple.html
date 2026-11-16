@@ -1,0 +1,9 @@
+{% if pg.page.paginator.num_pages > 1 %}
+<div class="d-flex justify-content-between align-items-center p-3 pt-2">
+  <span class="muted small">Página {{ pg.page.number }} de {{ pg.page.paginator.num_pages }}</span>
+  <div class="btn-group btn-group-sm">
+    {% if pg.prev %}<a class="btn btn-outline-secondary" href="{{ pg.prev }}#{{ pg.ancla }}">Anterior</a>{% endif %}
+    {% if pg.next %}<a class="btn btn-outline-secondary" href="{{ pg.next }}#{{ pg.ancla }}">Siguiente</a>{% endif %}
+  </div>
+</div>
+{% endif %}

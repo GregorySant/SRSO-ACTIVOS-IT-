@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} · {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1>{{ titulo }}</h1></div>
+<form method="post" class="panel" novalidate style="max-width:900px">{% csrf_token %}
+  {% if ayuda %}<div class="alert alert-light border"><i class="bi bi-info-circle"></i> {{ ayuda }}</div>{% endif %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="row g-3">
+    {% for fl in form.visible_fields %}
+    <div class="{% if fl.widget_type == 'textarea' %}col-12{% else %}col-md-6{% endif %}" id="wrap_{{ fl.name }}">
+      {% if fl.widget_type == 'checkbox' %}
+        <div class="form-check form-switch mt-4">{{ fl }} <label class="form-check-label" for="{{ fl.id_for_label }}">{{ fl.label }}</label></div>
+      {% else %}
+        <label class="form-label" for="{{ fl.id_for_label }}">{{ fl.label }}{% if fl.field.required %} <span class="text-danger">*</span>{% endif %}</label>
+        {{ fl }}
+      {% endif %}
+      {% if fl.help_text %}<div class="form-text">{{ fl.help_text|safe }}</div>{% endif %}
+      {% for e in fl.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  {% for h in form.hidden_fields %}{{ h }}{% endfor %}
+  <div class="d-flex gap-2 mt-4">
+    <button class="btn btn-accent px-4">{{ boton|default:"Guardar" }}</button>
+    <a class="btn btn-outline-secondary" href="{{ volver }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

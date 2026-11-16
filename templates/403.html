@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="panel text-center py-5" style="max-width:560px">
+  <h1 class="h3">No tienes permiso para esto</h1>
+  <p class="muted">Tu rol no permite realizar esta acción. Si lo necesitas, pídele a un administrador que lo haga o que cambie tu rol.</p>
+  <a class="btn btn-accent" href="{% url 'dashboard' %}">Volver al inicio</a>
+</div>
+{% endblock %}

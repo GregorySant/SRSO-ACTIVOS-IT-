@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="panel" style="max-width:560px">
+  <h1 class="h4">¿Eliminar este registro?</h1>
+  <p>Vas a eliminar <strong>{{ objeto }}</strong>. No se puede deshacer y quedará anotado en la bitácora.</p>
+  <form method="post" class="d-flex gap-2">{% csrf_token %}
+    <button class="btn btn-danger">Eliminar</button><a class="btn btn-outline-secondary" href="{{ volver }}">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

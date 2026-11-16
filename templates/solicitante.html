@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Inicio · {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ centro.nombre|default:"Mi centro" }}</h1>
+    <p class="muted mb-0">{% if centro %}{{ centro.gerencia }} · {% endif %}Mis activos y soportes solicitados</p></div>
+  {% if centro %}<a class="btn btn-accent" href="{% url 'soportes_solicitar' %}"><i class="bi bi-headset"></i> Solicitar soporte</a>{% endif %}
+</div>
+
+{% if abrir_detalle %}<button type="button" id="autoabrir" data-modal-url="{{ abrir_detalle }}" hidden></button>{% endif %}
+<div class="panel p-0 table-wrap mb-4" id="panelActivos">
+  <div class="p-3 pb-2"><h2 class="mb-0">Mis activos <span class="muted fw-normal">({{ activos.page.paginator.count }})</span></h2></div>
+  {% include 'parciales/filtros_simple.html' with f=activos %}
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Equipo</th><th>Marca</th><th>Modelo</th><th>Serial</th><th>Activo fijo</th><th>Área</th><th>Cantidad</th><th>Estatus</th></tr></thead>
+    <tbody>
+    {% for fila in activos.filas %}<tr>{% for c in fila %}<td>{{ c }}</td>{% endfor %}</tr>
+    {% empty %}<tr><td colspan="8" class="text-center py-4 muted">{% if activos.filtrado %}No hay equipos con estos filtros.{% else %}Tu centro aún no tiene equipos registrados.{% endif %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  {% include 'parciales/pag_simple.html' with pg=activos %}
+</div>
+
+<div class="panel p-0 table-wrap" id="panelSoportes">
+  <div class="p-3 pb-2"><h2 class="mb-0">Soportes solicitados <span class="muted fw-normal">({{ soportes.page.paginator.count }})</span></h2></div>
+  {% include 'parciales/filtros_simple.html' with f=soportes %}
+  <div data-refrescable>
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>Fecha</th><th>Área</th><th>Motivo</th><th>Solicitó el servicio</th><th>Técnico asignado</th><th>Estatus</th><th class="text-end">Detalle</th></tr></thead>
+    <tbody>
+    {% for fila in soportes.filas %}<tr>{% for c in fila.celdas %}<td>{{ c }}</td>{% endfor %}
+      <td class="text-end"><button type="button" class="btn btn-sm btn-outline-info" data-modal-url="{% url 'soportes_detalle' fila.pk %}" title="Ver información"><i class="bi bi-eye"></i></button></td></tr>
+    {% empty %}<tr><td colspan="7" class="text-center py-4 muted">{% if soportes.filtrado %}No hay soportes con estos filtros.{% else %}Todavía no hay soportes solicitados.{% endif %}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  {% include 'parciales/pag_simple.html' with pg=soportes %}
+  </div>
+</div>
+{% endblock %}

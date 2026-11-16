@@ -1,0 +1,141 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>   /* aplica el tema guardado (o el del sistema) antes de pintar, para evitar parpadeos */
+    (function () {
+      try {
+        var t = localStorage.getItem('tema') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-bs-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
+  <link rel="icon" href="{% static LOGO %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="{% static 'css/app.css' %}?v={{ ASSET_V }}" rel="stylesheet">
+</head>
+<body>
+{% block body %}
+<div class="shell">
+  <aside id="sidebar">
+    <div class="brand"><img src="{% static LOGO %}" alt="Logo"><span>{{ APP_NAME }}</span></div>
+    <nav>
+      <a class="nav-btn {% if seccion == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+        <i class="bi bi-speedometer2"></i><span>Inicio</span></a>
+
+      {% if user.es_solicitante %}
+      <a class="nav-btn {% if url_name == 'soportes_solicitar' %}active{% endif %}" href="{% url 'soportes_solicitar' %}">
+        <i class="bi bi-headset"></i><span>Solicitar soporte</span></a>
+      {% else %}
+
+      <button class="nav-btn" data-bs-toggle="collapse" data-bs-target="#g-inv" aria-expanded="{% if seccion == 'equipos' %}true{% else %}false{% endif %}">
+        <i class="bi bi-pc-display"></i><span>Inventario</span><i class="bi bi-chevron-down chev"></i></button>
+      <div id="g-inv" class="collapse {% if seccion == 'equipos' %}show{% endif %}">
+        <a class="nav-sub {% if url_name == 'equipos' %}active{% endif %}" href="{% url 'equipos' %}">Ver equipos</a>
+        {% if user.puede_editar %}<a class="nav-sub {% if url_name == 'equipos_nuevo' %}active{% endif %}" href="{% url 'equipos_nuevo' %}">Registrar equipo</a>{% endif %}
+      </div>
+
+      <button class="nav-btn" data-bs-toggle="collapse" data-bs-target="#g-sop" aria-expanded="{% if seccion == 'soportes' %}true{% else %}false{% endif %}">
+        <i class="bi bi-tools"></i><span>Soportes</span><i class="bi bi-chevron-down chev"></i></button>
+      <div id="g-sop" class="collapse {% if seccion == 'soportes' %}show{% endif %}">
+        <a class="nav-sub {% if url_name == 'soportes' %}active{% endif %}" href="{% url 'soportes' %}">Ver soportes</a>
+        {% if user.puede_editar %}<a class="nav-sub {% if url_name == 'soportes_nuevo' %}active{% endif %}" href="{% url 'soportes_nuevo' %}">Registrar soporte</a>{% endif %}
+      </div>
+
+      <button class="nav-btn" data-bs-toggle="collapse" data-bs-target="#g-zon" aria-expanded="{% if seccion == 'gerencias' or seccion == 'centros' %}true{% else %}false{% endif %}">
+        <i class="bi bi-geo-alt"></i><span>Zonas</span><i class="bi bi-chevron-down chev"></i></button>
+      <div id="g-zon" class="collapse {% if seccion == 'gerencias' or seccion == 'centros' %}show{% endif %}">
+        <a class="nav-sub {% if url_name == 'gerencias' %}active{% endif %}" href="{% url 'gerencias' %}">Gerencias</a>
+        {% if user.es_admin %}<a class="nav-sub {% if url_name == 'gerencias_nuevo' %}active{% endif %}" href="{% url 'gerencias_nuevo' %}">Registrar gerencia</a>{% endif %}
+        <a class="nav-sub {% if url_name == 'centros' %}active{% endif %}" href="{% url 'centros' %}">Centros</a>
+        {% if user.puede_editar %}<a class="nav-sub {% if url_name == 'centros_nuevo' %}active{% endif %}" href="{% url 'centros_nuevo' %}">Registrar centro</a>{% endif %}
+      </div>
+
+      <button class="nav-btn" data-bs-toggle="collapse" data-bs-target="#g-cat" aria-expanded="{% if seccion == 'categorias' %}true{% else %}false{% endif %}">
+        <i class="bi bi-tags"></i><span>Categorías</span><i class="bi bi-chevron-down chev"></i></button>
+      <div id="g-cat" class="collapse {% if seccion == 'categorias' %}show{% endif %}">
+        <a class="nav-sub {% if url_name == 'categorias' %}active{% endif %}" href="{% url 'categorias' %}">Ver categorías</a>
+        {% if user.puede_editar %}<a class="nav-sub {% if url_name == 'categorias_nuevo' %}active{% endif %}" href="{% url 'categorias_nuevo' %}">Crear categoría</a>{% endif %}
+      </div>
+
+      {% if user.es_admin %}
+      <button class="nav-btn" data-bs-toggle="collapse" data-bs-target="#g-adm" aria-expanded="{% if seccion == 'usuarios' or seccion == 'bitacora' %}true{% else %}false{% endif %}">
+        <i class="bi bi-shield-lock"></i><span>Administración</span><i class="bi bi-chevron-down chev"></i></button>
+      <div id="g-adm" class="collapse {% if seccion == 'usuarios' or seccion == 'bitacora' %}show{% endif %}">
+        <a class="nav-sub {% if url_name == 'usuarios' %}active{% endif %}" href="{% url 'usuarios' %}">Usuarios</a>
+        <a class="nav-sub {% if url_name == 'usuarios_nuevo' %}active{% endif %}" href="{% url 'usuarios_nuevo' %}">Crear usuario</a>
+        <a class="nav-sub {% if url_name == 'bitacora' %}active{% endif %}" href="{% url 'bitacora' %}">Bitácora de acciones</a>
+      </div>
+      {% endif %}
+      {% endif %}
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button id="toggleSidebar" class="btn btn-outline-secondary" type="button" aria-label="Mostrar u ocultar menú"><i class="bi bi-list"></i></button>
+      <div class="ms-auto d-flex align-items-center gap-2">
+      {% if user.recibe_notificaciones %}
+      <div class="dropdown" id="campana" data-url="{% url 'notificaciones_resumen' %}" data-sonido="{% static 'sounds/notificacion.wav' %}">
+        <button type="button" class="btn btn-outline-secondary position-relative" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                aria-label="Notificaciones" title="Notificaciones">
+          <i class="bi bi-bell"></i>
+          <span id="campanaCuenta" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end p-0" style="width:360px;max-width:92vw">
+          <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+            <span class="d-flex align-items-center gap-2"><strong>Notificaciones</strong>
+              <button type="button" id="campanaSonido" class="btn btn-link btn-sm p-0" aria-label="Activar o silenciar el sonido"></button></span>
+            <form method="post" action="{% url 'notificaciones_leer_todas' %}" class="m-0">{% csrf_token %}
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button class="btn btn-link btn-sm p-0">Marcar todas como leídas</button></form>
+          </div>
+          <div id="campanaLista" style="max-height:360px;overflow:auto"><div class="p-3 text-muted small">Cargando…</div></div>
+        </div>
+      </div>
+      {% endif %}
+      <button type="button" class="btn btn-outline-secondary" data-tema></button>
+      <div class="dropdown">
+        <button class="btn user-chip dropdown-toggle" data-bs-toggle="dropdown">
+          <i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}
+          <small>{{ user.get_rol_display }}</small></button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><form method="post" action="{% url 'logout' %}">{% csrf_token %}
+            <button class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</button></form></li>
+        </ul>
+      </div>
+      </div>
+    </header>
+    <main class="content">
+      {% for m in messages %}<div class="alert alert-{{ m.tags|default:'info' }} alert-dismissible fade show">{{ m }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>{% endfor %}
+      {% if sin_asignar %}<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i>
+        Tu usuario no tiene una gerencia (o centro) asignada, por eso no verás información. Pídele al administrador que te la asigne.</div>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<div class="modal fade" id="modalGeneral" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content" id="modalContenido"></div></div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="toastNotif" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header"><i class="bi bi-bell-fill text-danger me-2"></i><strong class="me-auto">Nueva notificación</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Cerrar"></button></div>
+    <div class="toast-body" id="toastTexto"></div>
+  </div>
+</div>
+{% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/app.js' %}?v={{ ASSET_V }}"></script>
+{% block js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,6 @@
+{% for n in items %}
+<a class="dropdown-item d-flex gap-2 py-2 {% if not n.leida %}fw-semibold{% endif %}" href="{% url 'notificaciones_abrir' n.pk %}" style="white-space:normal">
+  <i class="bi bi-circle-fill mt-1 {% if n.leida %}invisible{% else %}text-danger{% endif %}" style="font-size:.5rem"></i>
+  <span>{{ n.mensaje }}<br><small class="text-muted fw-normal">{{ n.fecha|date:"d/m/Y H:i" }}</small></span>
+</a>
+{% empty %}<div class="p-3 text-muted small">Sin notificaciones.</div>{% endfor %}
